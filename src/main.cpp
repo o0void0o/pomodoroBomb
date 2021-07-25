@@ -15,6 +15,7 @@ E |   | C
 // Pin x-xx is connected to the 7 segments of the display.
 
 long input = 20;
+long idle=0;
 boolean isCountingDown = false;
 boolean paused = false;
 boolean armed = false;
@@ -215,6 +216,7 @@ ISR(TIMER1_COMPA_vect) // interrupt service routine
 
   if (isCountingDown && armed)
   {
+    idle=0;
     Serial.println(isCountingDown);
     if (input == 0)
     {
@@ -226,6 +228,8 @@ ISR(TIMER1_COMPA_vect) // interrupt service routine
     {
       tone(buzzer, 1000, 100);
     }
+  }else {
+    idle++;
   }
 }
 
@@ -243,6 +247,7 @@ void loop()
 
   if (anInput > 1020)
   {
+    idle=0;
     if (!dashArming)
     {
       clearScreen();
@@ -260,18 +265,12 @@ void loop()
       reset();
       return;
     }
-
-
-
     if (longPress > 5000 && !isCountingDown && dashArming < 4)
     {
-      Serial.println("poes1");
       dashArm();
     }
     else if (!isCountingDown && dashArming == 4)
     {
-      Serial.println("poes2");
-
       mode = 9;
       armed = true;
       btnPressed = 0;
@@ -328,6 +327,12 @@ void loop()
       return;
     }
   }
+
+if(idle>3600)//one hour...save those leds...
+{
+  seqmentControl(new int[4]{0, 0, 0, 0});
+    return;
+}
 
   if (mode == -1)
   {
